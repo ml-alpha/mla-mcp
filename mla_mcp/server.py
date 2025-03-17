@@ -1,6 +1,6 @@
 import httpx
 from mcp.server.fastmcp import FastMCP
-from typing import Any, TypedDict, List
+from typing import TypedDict, List
 
 from mla_mcp.conf import MLA_API_URL
 
