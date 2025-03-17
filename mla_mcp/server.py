@@ -1,6 +1,6 @@
 import httpx
 from mcp.server.fastmcp import FastMCP
-from typing import TypedDict, List, Dict
+from typing import TypedDict, List, Dict, Any
 
 from mla_mcp.conf import MLA_API_URL
 
@@ -25,6 +25,60 @@ class ETFSummary(TypedDict):
     description: str
     countriesAllocation: Dict[str, float]
     sectors: Dict[str, float]
+
+class ExchangeRecommendation(TypedDict):
+    list_top_recommendations: List[Dict[str, Any]]
+    ticker_action: str
+    ticker_rank: float
+
+class FinancialCheck(TypedDict):
+    date: str
+    altmanZScore: float
+    altmanZScoreGood: float
+    financialCheckScore: float
+    piotroskiScore: float
+    # ... and many other fields
+
+class FinancialData(TypedDict):
+    date: List[str]
+    grossProfit: List[str]
+    grossProfitRatio: List[str]
+    netIncome: List[str]
+    netIncomeRatio: List[str]
+    revenue: List[str]
+    revenueGrowth: List[str]
+    symbol: List[str]
+
+class FinancialScore(TypedDict):
+    date: str
+    dividendScore: float
+    longTermValueScore: float
+    mediumTermValueScore: float
+    overallScore: float
+    safetyScore: float
+    shortTermValueScore: float
+
+class StocksListResponse(TypedDict):
+    companies: Dict[str, str]
+    etfs: List[Dict[str, str]]
+
+class ScreenerRequest(TypedDict):
+    filters: List[Dict[str, Any]]
+    industries: List[str]
+    marketcaps: List[str]
+    sectors: List[str]
+    page: int
+    perPage: int
+    sortBy: List[Dict[str, str]]
+
+class TopFinancialScoresRequest(TypedDict):
+    industries: List[str]
+    marketcaps: List[str]
+    sectors: List[str]
+    limit: int
+    min_price: float
+    sortby: str
+    weights: List[str]
 
 @mcp.tool()
 def get_stock_price(
@@ -110,4 +164,196 @@ def get_10k_sections(symbol: str, sections: List[str]) -> List[str]:
         f"{MLA_API_URL}/stock/10k-sections/{symbol}",
         json={"sections": sections}
     )
+    return response.json()
+
+@mcp.tool()
+def get_exchange_recommendation(symbol: str, weights: Dict[str, float]) -> ExchangeRecommendation:
+    """Get stock exchange recommendation based on provided weights.
+
+    Args:
+        symbol: The stock ticker symbol
+        weights: Weighted scores for recommendation criteria (e.g., {"criteria1": 0.5})
+
+    Returns:
+        Exchange recommendation including top recommendations and ticker action
+    """
+    response = httpx.post(
+        f"{MLA_API_URL}/stock/exchange_recommendation/{symbol}",
+        json={"weights": weights}
+    )
+    return response.json()
+
+@mcp.tool()
+def get_financial_check(symbol: str) -> FinancialCheck:
+    """Get financial checks for a stock.
+
+    Args:
+        symbol: The stock ticker symbol
+
+    Returns:
+        Comprehensive financial check data including various scores and metrics
+    """
+    response = httpx.get(f"{MLA_API_URL}/stock/financial_check/{symbol}")
+    return response.json()
+
+@mcp.tool()
+def get_financial_data(symbol: str) -> FinancialData:
+    """Get financial data for a stock including revenue, profit, and growth metrics.
+
+    Args:
+        symbol: The stock ticker symbol
+
+    Returns:
+        Historical financial data including revenue, profit, and growth metrics
+    """
+    response = httpx.get(f"{MLA_API_URL}/stock/financial_data/{symbol}")
+    return response.json()
+
+@mcp.tool()
+def get_financial_data_ttm(symbol: str) -> Dict:
+    """Get TTM (Trailing Twelve Months) financial data for a stock.
+
+    Args:
+        symbol: The stock ticker symbol
+
+    Returns:
+        TTM financial data
+    """
+    response = httpx.get(f"{MLA_API_URL}/stock/financial_data_ttm/{symbol}")
+    return response.json()
+
+@mcp.tool()
+def get_financial_score(symbol: str) -> List[FinancialScore]:
+    """Get the financial score for a stock.
+
+    Args:
+        symbol: The stock ticker symbol
+
+    Returns:
+        List of financial scores including various component scores
+    """
+    response = httpx.get(f"{MLA_API_URL}/stock/financial_score/{symbol}")
+    return response.json()
+
+@mcp.tool()
+def get_all_stocks() -> StocksListResponse:
+    """Returns a list of all stock tickers along with their company names and ETF information.
+
+    Returns:
+        Dictionary containing companies and ETFs information
+    """
+    response = httpx.get(f"{MLA_API_URL}/stocks/all")
+    return response.json()
+
+@mcp.tool()
+def get_exchange_recommendation_list(symbols: str, weights: Dict[str, float]) -> Dict[str, Any]:
+    """Get stock exchange recommendations for multiple tickers based on provided weights.
+
+    Args:
+        symbols: Comma-separated list of stock ticker symbols (e.g., "AAPL,MSFT")
+        weights: Weighted scores for recommendation criteria
+
+    Returns:
+        Exchange recommendations for the specified tickers
+    """
+    response = httpx.post(
+        f"{MLA_API_URL}/stocks/exchange_recommendation_list/{symbols}",
+        json={"weights": weights}
+    )
+    return response.json()
+
+@mcp.tool()
+def get_correlations(tickers: str, period: int = 90) -> Dict[str, Any]:
+    """Get correlations for a list of stock tickers over a specified period.
+
+    Args:
+        tickers: Comma-separated list of stock tickers
+        period: Number of days to look back (10-365)
+
+    Returns:
+        Dictionary with stock correlations
+    """
+    response = httpx.get(
+        f"{MLA_API_URL}/stocks/get-correlations",
+        params={"tickers": tickers, "period": period}
+    )
+    return response.json()
+
+@mcp.tool()
+def get_last_prices(ticker_list: str) -> Dict[str, float]:
+    """Get the last prices for a list of tickers.
+
+    Args:
+        ticker_list: Comma-separated list of ticker symbols (e.g., "AAPL,MSFT")
+
+    Returns:
+        Dictionary mapping ticker symbols to their last prices
+    """
+    response = httpx.get(f"{MLA_API_URL}/stocks/get-last-prices/{ticker_list}")
+    return response.json()
+
+@mcp.tool()
+def get_scores(ticker_list: str) -> Dict[str, List]:
+    """Get scores for a list of tickers.
+
+    Args:
+        ticker_list: Comma-separated list of ticker symbols
+
+    Returns:
+        Dictionary containing arrays of scores and related data
+    """
+    response = httpx.get(f"{MLA_API_URL}/stocks/get-scores/{ticker_list}")
+    return response.json()
+
+@mcp.tool()
+def get_stocks_info(tickers: List[str]) -> Dict:
+    """Get stocks information for a list of tickers.
+
+    Args:
+        tickers: List of ticker symbols
+
+    Returns:
+        Dictionary containing stock information
+    """
+    response = httpx.post(f"{MLA_API_URL}/stocks/info", json={"tickers": tickers})
+    return response.json()
+
+@mcp.tool()
+def get_latest_filings(limit: int = None) -> Dict[str, List]:
+    """Returns the latest filings data for companies.
+
+    Args:
+        limit: Optional maximum number of results to retrieve
+
+    Returns:
+        Dictionary containing arrays of filing data
+    """
+    params = {"limit": limit} if limit else None
+    response = httpx.get(f"{MLA_API_URL}/stocks/latest-fillings", params=params)
+    return response.json()
+
+@mcp.tool()
+def get_screener(filters: ScreenerRequest) -> Dict[str, Any]:
+    """Perform a stock screener query based on specified filters.
+
+    Args:
+        filters: Dictionary containing filter criteria, pagination, and sorting options
+
+    Returns:
+        Dictionary containing screener results and metadata
+    """
+    response = httpx.post(f"{MLA_API_URL}/stocks/screener", json=filters)
+    return response.json()
+
+@mcp.tool()
+def get_top_financial_scores(filters: TopFinancialScoresRequest) -> List[Dict[str, Any]]:
+    """Get a list of stocks with top financial scores.
+
+    Args:
+        filters: Dictionary containing filter criteria and sorting options
+
+    Returns:
+        List of stocks with their financial scores
+    """
+    response = httpx.post(f"{MLA_API_URL}/stocks/top_financial_scores", json=filters)
     return response.json()
