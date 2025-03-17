@@ -1,0 +1,19 @@
+[project]
+name = "mla_mcp"
+version = "0.1.0"
+description = "MCP Server for ML Alpha"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "llama-index>=0.12.24",
+    "llama-index-tools-mcp>=0.1.0",
+    "mcp>=1.4.1",
+]
+
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project.scripts]
+mla = "mla_mcp:main"
