@@ -1,55 +1,37 @@
 import httpx
 from mcp.server.fastmcp import FastMCP
-from typing import TypedDict, List, Dict, Any
+from typing import List, Dict, Any, TypedDict
+from pydantic import BaseModel
 
 from mla_mcp.conf import MLA_API_URL
-
 
 # Initialize FastMCP server
 mcp = FastMCP("ML Alpha")
 
-class StockPriceResponse(TypedDict):
+class StockPriceResponse(BaseModel):
     labels: List[str]
     price: List[str]
 
-class CompanySummary(TypedDict):
+class CompanySummary(BaseModel):
     companyName: str
     description: str
     industry: str
     sector: str
     symbol: str
 
-class ETFSummary(TypedDict):
+class ETFSummary(BaseModel):
     name: str
     symbol: str
     description: str
     countriesAllocation: Dict[str, float]
     sectors: Dict[str, float]
 
-class ExchangeRecommendation(TypedDict):
+class ExchangeRecommendation(BaseModel):
     list_top_recommendations: List[Dict[str, Any]]
     ticker_action: str
     ticker_rank: float
 
-class FinancialCheck(TypedDict):
-    date: str
-    altmanZScore: float
-    altmanZScoreGood: float
-    financialCheckScore: float
-    piotroskiScore: float
-    # ... and many other fields
-
-class FinancialData(TypedDict):
-    date: List[str]
-    grossProfit: List[str]
-    grossProfitRatio: List[str]
-    netIncome: List[str]
-    netIncomeRatio: List[str]
-    revenue: List[str]
-    revenueGrowth: List[str]
-    symbol: List[str]
-
-class FinancialScore(TypedDict):
+class FinancialScore(BaseModel):
     date: str
     dividendScore: float
     longTermValueScore: float
@@ -58,11 +40,11 @@ class FinancialScore(TypedDict):
     safetyScore: float
     shortTermValueScore: float
 
-class StocksListResponse(TypedDict):
+class StocksListResponse(BaseModel):
     companies: Dict[str, str]
     etfs: List[Dict[str, str]]
 
-class ScreenerRequest(TypedDict):
+class ScreenerRequest(BaseModel):
     filters: List[Dict[str, Any]]
     industries: List[str]
     marketcaps: List[str]
@@ -71,7 +53,7 @@ class ScreenerRequest(TypedDict):
     perPage: int
     sortBy: List[Dict[str, str]]
 
-class TopFinancialScoresRequest(TypedDict):
+class TopFinancialScoresRequest(BaseModel):
     industries: List[str]
     marketcaps: List[str]
     sectors: List[str]
@@ -79,6 +61,7 @@ class TopFinancialScoresRequest(TypedDict):
     min_price: float
     sortby: str
     weights: List[str]
+
 
 @mcp.tool()
 def get_stock_price(
@@ -184,7 +167,7 @@ def get_exchange_recommendation(symbol: str, weights: Dict[str, float]) -> Excha
     return response.json()
 
 @mcp.tool()
-def get_financial_check(symbol: str) -> FinancialCheck:
+def get_financial_check(symbol: str) -> Dict:
     """Get financial checks for a stock.
 
     Args:
@@ -197,16 +180,34 @@ def get_financial_check(symbol: str) -> FinancialCheck:
     return response.json()
 
 @mcp.tool()
-def get_financial_data(symbol: str) -> FinancialData:
+def get_financial_data(
+    symbol: str,
+    period: str = "annual",
+    history: int = 10,
+    categories: List[str] = None
+) -> Dict:
     """Get financial data for a stock including revenue, profit, and growth metrics.
 
     Args:
         symbol: The stock ticker symbol
+        period: The period for data (annual or quarterly)
+        history: Number of years of historical data
+        categories: List of specific financial categories to retrieve
 
     Returns:
-        Historical financial data including revenue, profit, and growth metrics
+        Historical financial data including dates, revenue, profits and related metrics
     """
-    response = httpx.get(f"{MLA_API_URL}/stock/financial_data/{symbol}")
+    params = {
+        "period": period,
+        "history": history
+    }
+    if categories:
+        params["categories"] = categories
+
+    response = httpx.get(
+        f"{MLA_API_URL}/stock/financial_data/{symbol}",
+        params=params
+    )
     return response.json()
 
 @mcp.tool()
