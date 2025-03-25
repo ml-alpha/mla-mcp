@@ -42,3 +42,20 @@ The server provides the following main categories of tools:
 - `get_latest_filings`: Recent SEC filings
 
 
+## Connect to the MCP server:
+
+```
+{
+    "mcpServers": {
+        "mcp-mlalpha":{
+            "command": "uvx",
+            "args": [
+            "--python=3.12",
+            "--from",
+            "git+https://github.com/ml-alpha/mla-mcp",
+            "mcp-mlalpha"
+            ]
+        }
+    }
+}
+```

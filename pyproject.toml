@@ -24,4 +24,4 @@ dev = [
 ]
 
 [project.scripts]
-server = "mla_mcp:main"
+mcp-mlalpha = "mla_mcp:main"
