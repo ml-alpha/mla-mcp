@@ -735,13 +735,13 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
-    { name = "llama-index" },
-    { name = "llama-index-tools-mcp" },
     { name = "mcp" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "llama-index" },
+    { name = "llama-index-tools-mcp" },
     { name = "mcp", extra = ["cli"] },
 ]
 test = [
@@ -751,13 +751,15 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "llama-index", specifier = ">=0.12.24" },
-    { name = "llama-index-tools-mcp", specifier = ">=0.1.0" },
     { name = "mcp", specifier = ">=1.4.1" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "mcp", extras = ["cli"], specifier = ">=1.4.1" }]
+dev = [
+    { name = "llama-index", specifier = ">=0.12.24" },
+    { name = "llama-index-tools-mcp", specifier = ">=0.1.0" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.4.1" },
+]
 test = [{ name = "pytest", specifier = ">=8.3.5" }]
 
 [[package]]
