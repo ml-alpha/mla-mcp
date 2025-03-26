@@ -202,7 +202,7 @@ def get_financial_data(
         "history": history
     }
     if categories:
-        params["categories"] = categories
+        params["categories"] = ','.join(categories)
 
     response = httpx.get(
         f"{MLA_API_URL}/stock/financial_data/{symbol}",
