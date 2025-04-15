@@ -202,6 +202,9 @@ def get_financial_data(
         "history": history
     }
     if categories:
+        if 'date' not in categories:
+            categories.append('date')
+
         params["categories"] = ','.join(categories)
 
     response = httpx.get(
